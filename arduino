@@ -1,0 +1,101 @@
+/**
+  CONTADOR BINÁRIO COM ARDUINO E 3 LEDS
+
+**/
+
+// Pinos dos LEDs
+int ledPin1 = 3;
+int ledPin2 = 4;
+int ledPin3 = 5;
+int ledPin4 = 6;
+
+// Pino do botão
+int buttonPin = 7;
+
+// contador
+int count = 0;
+
+/**
+  Na função setup() são inicializadas as variáveis e dispositivos que
+  serão utilizados no projeto, em nosso caso foram configurados os pinos
+  utilizados pelos LEDs para OUTPUT (saída de dados), também o botão como
+  INPUT (entrada de dados) e a comunicação serial para debug.
+*/
+void setup() {
+  pinMode(ledPin1, OUTPUT);
+  pinMode(ledPin2, OUTPUT);
+  pinMode(ledPin3, OUTPUT);
+  pinMode(ledPin4 , OUTPUT);
+
+  pinMode(buttonPin, INPUT);
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  /**
+    Lê o valor do botão, se pressionado (press) é LOW (ou 1), se liberado (release)
+    o valor é HIGH (ou 0)
+  */
+  Serial.println(digitalRead (buttonPin));
+  if ( digitalRead (buttonPin) == LOW) {
+    Serial.println("Botao pressionado!");
+
+    // Incrementa o contador
+    count = (count == 15) ? 0 : count + 1;
+
+    Serial.print("Contador em:");
+    Serial.println(count);
+
+    /*
+      Aqui é aplicada a lógica para fazer acender cada LED.
+
+      O que é feito nessa parte do código chama-se deslocamento de bits,
+      usamos essa técnica para identificar o estado que o led ficará
+      conforme o número armazenado no contador.
+
+      Nosso contador utiliza apenas 3 bits (três LEDs) com isso o valor
+      máximo que ele alcançará é o 7 (conforme mostrado no cabeçalho.
+
+      Para entender o código (considerando tamanho de 3 bits, no nosso caso 3 leds):
+
+      Decimal       Binário
+      ---------------------------
+        0             000
+        1             001
+        2             010
+        3             011
+        4             100
+        5             101
+        6             110
+        7             111
+
+      Conforme falei acima, o deslocamento de bits vai mover os bits do número para
+      a direita o número de casas que for especificado, olhando para a linha abaixo
+      referente ao ledPin2 a operação "count >> 1" move os bits todos uma casa para
+      a direita, por exemplo, considere a segunda posição, de número 1:
+          2 = 010       010 >> 1 se transforma em 001
+          3 = 011       011 >> 1 se transforma em 001 (o bit mais a direita é sempre perdido, e adiciona-se um zero a esquerda)
+          4 = 100       100 >> 1 se transforma em 010
+          ...           ...
+      A mesma coisa acontece com a terceira posição:
+          2 = 010       010 >> 2 se transforma em 000
+          3 = 011       011 >> 2 se transforma em 000 (o bit mais a direita é sempre perdido, e adiciona-se um zero a esquerda)
+          4 = 100       100 >> 2 se transforma em 001
+          ...           ...
+
+      Isso tudo é feito para que o respectivo bit (0 ou 1) da posição indicada (primeira, segunda ou terceira) fique
+      na posição mais a direita e assim podemos aplicar o % (módulo ou resto) com 2 e ver se aquela posição
+      deve ser ligada ou desligada. O operador % faz uma divição de inteiros entre os dois números, sempre em decimal,
+      e retorna o seu resto, em nosso caso sempre retornará 1 ou 0 já que estamos dividindo por 2, e isso é enviado
+      como sinal HIGH (1) ou LOW(0) para o Arduino, ligando ou desligando os LEDs.
+    */
+    digitalWrite(ledPin1, (count % 2));
+    digitalWrite(ledPin2, (count >> 1) % 2);
+    digitalWrite(ledPin3, (count >> 2) % 2);
+    digitalWrite(ledPin4, (count >> 3)  % 2);
+
+    // Delay para evitar a captura repetitiva do botão pressionado
+    delay (500);
+  }
+} b
